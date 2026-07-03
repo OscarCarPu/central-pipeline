@@ -2,7 +2,7 @@
 
 ## Medallion layers
 
-Data flows through three layers. Each layer is a Postgres schema.
+Three layers, one Postgres schema each.
 
 | Layer | Schema | Owner | Purpose |
 |---|---|---|---|
@@ -11,21 +11,27 @@ Data flows through three layers. Each layer is a Postgres schema.
 | Gold | `marts` | dbt | Aggregated business logic. What gv-api reads. |
 
 ```
-Go consumer → raw (bronze)
+Go consumer → raw.mqtt_events (bronze)
                   ↓
-            dbt staging models (silver)  — stg_uptime_events, stg_temperature_readings, ...
+            dbt staging (silver)  — one per source: watchdog_uptime, ...
                   ↓
-            dbt mart models (gold)       — mart_uptime_windows, mart_daily_temperature, ...
+            dbt marts (gold)      — uptime_windows, ...
                   ↓
             gv-api
 ```
 
-Bronze is never modified after insert. If a dbt model has a bug, fix the SQL and rerun dbt — the raw data is always there to replay from.
+Bronze is never modified after insert — fix a buggy model and rerun dbt; raw is always there to replay from.
 
-## dbt model folders
+Per-source staging and mart models live under [`docs/sources/`](sources/).
 
-```
-models/
-  staging/    ← silver
-  marts/      ← gold
-```
+## Raw table — `raw.mqtt_events`
+
+One generic table for every source. The consumer inserts each MQTT message untouched — no parsing.
+
+| Column | Type | Description |
+| ------ | ---- | ----------- |
+| `id` | `BIGINT` (autoincrement) | Surrogate key, ingestion order. |
+| `topic` | `TEXT` | Full MQTT topic. Carries the source/device. |
+| `payload` | `JSONB` | Exact MQTT payload, unparsed. |
+| `received_at` | `TIMESTAMPTZ` | When the consumer ingested the message. |
+
