@@ -8,11 +8,28 @@ Follows the [medallion architecture](docs/internal.md) (bronze → silver → go
 
 ```
 MQTT (all topics)
-  → Go consumer → raw schema (bronze)
+  → Go consumer → raw (bronze)
   → dbt staging (silver)
   → dbt marts (gold)
   → gv-api
 ```
+
+## Local development
+
+Requires Docker with Compose.
+
+```
+cp .env.example .env   # set your credentials
+make up                # start Postgres, wait until healthy
+```
+
+Postgres listens on `localhost:5432`. On first start the SQL in `initdb/` runs automatically to create the schemas.
+
+| Target | Description |
+|---|---|
+| `make up` | Start and wait until healthy |
+| `make down` | Stop containers (data kept) |
+| `make restart` | Rebuild from scratch — **drops the database volume** |
 
 ## Sources
 
@@ -20,6 +37,3 @@ MQTT (all topics)
 |---|---|---|
 | mutual-watchdog | `devices/esp32/ping`, `events/uptime/#` | uptime windows |
 
-## Features
-
-- [uptime-process](docs/feature/uptime-process.md)
