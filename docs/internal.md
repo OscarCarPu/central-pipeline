@@ -24,6 +24,12 @@ Bronze is never modified after insert — fix a buggy model and rerun dbt; raw i
 
 Per-source staging and mart models live under [`docs/sources/`](sources/).
 
+## Runtime shape
+
+Bronze is streaming, silver and gold are batch. The consumer is a long-running service, not a scheduled job — the at-least-once guarantee below depends on holding one persistent MQTT session, and a process that connected and disconnected on a timer would make the broker's offline queue the normal delivery path instead of the outage path. dbt is the opposite: a batch job over whatever bronze holds, so it is scheduled rather than resident.
+
+Both run as containers. The consumer is a compose service with a restart policy; dbt sits behind the `tools` profile and is invoked per run, on a timer once deployed.
+
 ## Raw table — `raw.mqtt_events`
 
 One generic table for every source. The consumer inserts each MQTT message untouched — no parsing.

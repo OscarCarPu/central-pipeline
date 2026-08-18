@@ -1,12 +1,12 @@
 up:
-	docker compose up -d --wait
+	docker compose up -d --wait db
 
 down:
 	docker compose down
 
 restart:
 	docker compose down -v
-	docker compose up -d --build --wait
+	docker compose up -d --build --wait db
 
 test:
 	go test ./...
@@ -22,3 +22,12 @@ test-integration:
 
 db:
 	@set -a; . ./.env; set +a; PGPASSWORD=$$POSTGRES_PASSWORD pgcli -h $$POSTGRES_HOST -p $$POSTGRES_PORT -U $$POSTGRES_USER -d $$POSTGRES_DB
+
+dbt-run:
+	docker compose run --rm dbt build
+
+consumer-up:
+	docker compose up -d --build consumer
+
+consumer-logs:
+	docker compose logs -f consumer
