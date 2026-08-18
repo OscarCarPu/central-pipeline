@@ -8,3 +8,8 @@ restart:
 	docker compose down -v
 	docker compose up -d --build --wait
 
+test:
+	go test ./...
+
+simulate:
+	@set -a; . ./.env; set +a; go run ./cmd/simulator $(ARGS)

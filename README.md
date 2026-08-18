@@ -27,11 +27,15 @@ Postgres listens on `localhost:5432`. On first start the SQL in `initdb/` runs a
 
 The consumer authenticates against the broker as `central-pipeline`, which needs both a password (`make create-password`) and an entry in the broker's ACL — a user missing from the ACL connects fine and then silently receives nothing.
 
+`make simulate` publishes fake uptime events as `central-pipeline-sim`, so the pipeline can be exercised without the real devices. See [cmd/simulator](cmd/simulator).
+
 | Target | Description |
 |---|---|
 | `make up` | Start and wait until healthy |
 | `make down` | Stop containers (data kept) |
 | `make restart` | Rebuild from scratch — **drops the database volume** |
+| `make test` | Run the Go tests |
+| `make simulate` | Publish simulated uptime events (`ARGS="-mode=backfill"`) |
 
 ## Sources
 
