@@ -39,9 +39,13 @@ The table is generic, the subscription is not: the topic list lives in the consu
 
 ## Ingestion contract
 
+The consumer subscribes to the topics in `internal/topics` and inserts each message into `raw.mqtt_events` untouched. `payload` is `JSONB`, which rejects anything that is not valid JSON, so a payload that is not gets stored as a JSON string instead of being dropped — `not json` becomes `"not json"`. Staging models filter with `jsonb_typeof(payload) = 'object'`.
+
 The consumer connects with a fixed client id, a persistent session (clean session off) and subscribes at QoS 1. All three are required together — drop any one and the broker stops queueing messages while the consumer is down.
 
 That gives at-least-once delivery, so **duplicates are possible**: a redelivery after a lost ack inserts the same event twice. Bronze keeps them, since it records what actually arrived. Staging deduplicates — `staging.watchdog_uptime` on (`device`, `state`, `event_time`), keeping the lowest `event_id`.
+
+The consumer acks a message only after its row is committed, so a failed insert leaves it unacked and the broker redelivers it when the session resumes. That persistent session is the queue for now; a local disk spool is only needed to survive the broker's own ceiling.
 
 The broker queues at most `max_queued_messages` (1000, its default) per offline session. A long enough outage drops the oldest messages beyond that.
 

@@ -9,12 +9,14 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	ClientID string
-	Clean    bool
+	Host      string
+	Port      string
+	Username  string
+	Password  string
+	ClientID  string
+	Clean     bool
+	ManualAck bool
+	OnMessage paho.MessageHandler
 }
 
 func ConfigFromEnv(userKey, passKey, clientID string, clean bool) (Config, error) {
@@ -46,7 +48,14 @@ func Connect(c Config) (paho.Client, error) {
 		SetUsername(c.Username).
 		SetPassword(c.Password).
 		SetCleanSession(c.Clean).
-		SetConnectTimeout(5 * time.Second)
+		SetConnectTimeout(5 * time.Second).
+		SetAutoAckDisabled(c.ManualAck).
+		SetAutoReconnect(true).
+		SetResumeSubs(true)
+
+	if c.OnMessage != nil {
+		opts.SetDefaultPublishHandler(c.OnMessage)
+	}
 
 	client := paho.NewClient(opts)
 	t := client.Connect()
@@ -54,4 +63,16 @@ func Connect(c Config) (paho.Client, error) {
 		return nil, fmt.Errorf("connecting to %s:%s timed out", c.Host, c.Port)
 	}
 	return client, t.Error()
+}
+
+func Subscribe(c paho.Client, topics []string, qos byte, h paho.MessageHandler) error {
+	filters := make(map[string]byte, len(topics))
+	for _, t := range topics {
+		filters[t] = qos
+	}
+	t := c.SubscribeMultiple(filters, h)
+	if !t.WaitTimeout(10 * time.Second) {
+		return fmt.Errorf("subscribe timed out")
+	}
+	return t.Error()
 }

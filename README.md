@@ -36,6 +36,9 @@ The consumer authenticates against the broker as `central-pipeline`, which needs
 | `make restart` | Rebuild from scratch — **drops the database volume** |
 | `make test` | Run the Go tests |
 | `make simulate` | Publish simulated uptime events (`ARGS="-mode=backfill"`) |
+| `make consume` | Run the consumer: MQTT → `raw.mqtt_events` |
+| `make test-integration` | Run the tests that need Postgres up |
+| `make db` | Open a pgcli session against the database |
 
 ## Sources
 

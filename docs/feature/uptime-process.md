@@ -2,7 +2,7 @@
 
 Consumes `events/uptime/lab` and `events/uptime/watchdog` from MQTT, persists raw events to Postgres, and transforms them into uptime windows via dbt for gv-api to serve.
 
-Disk queue and retry logic live here, not in the source projects.
+Retry logic lives here, not in the source projects. The queue is the broker's persistent session rather than a local disk spool — see the ingestion contract in [internal.md](../internal.md).
 
 ## Simulator
 
