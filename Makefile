@@ -23,6 +23,9 @@ test-integration:
 db:
 	@set -a; . ./.env; set +a; PGPASSWORD=$$POSTGRES_PASSWORD pgcli -h $$POSTGRES_HOST -p $$POSTGRES_PORT -U $$POSTGRES_USER -d $$POSTGRES_DB
 
+dbt-deps:
+	docker compose run --rm dbt deps
+
 dbt-run:
 	docker compose run --rm dbt build
 
