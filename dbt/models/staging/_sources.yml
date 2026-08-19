@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: mqtt_events
+        description: "Raw events on MQTT"
+        loaded_at_field: received_at

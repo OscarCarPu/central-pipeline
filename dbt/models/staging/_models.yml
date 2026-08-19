@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: watchdog_uptime
+    description: "Uptime events per device"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [device, state, event_time]
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: device
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['lab','watchdog']
+      - name: state
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['up','down']
+      - name: event_time
+        tests: [not_null]
