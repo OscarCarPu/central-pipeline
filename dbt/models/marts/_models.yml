@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: uptime_windows
+    description: "State windows per device, open window has a null end_time"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [device, start_time]
+      - dbt_utils.expression_is_true:
+          expression: "end_time IS null OR end_time > start_time"
+    columns:
+      - name: device
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['lab','watchdog']
+      - name: state
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['up','down']
+      - name: start_time
+        tests: [not_null]
+
+  - name: uptime_aggregations
+    description: "Uptime percentage per device and range, as of range_end"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [device, time]
+      - dbt_utils.expression_is_true:
+          expression: "range_end > range_start"
+    columns:
+      - name: device
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['lab','watchdog']
+      - name: time
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['month','3 months','year','all']
+      - name: range_start
+        tests: [not_null]
+      - name: range_end
+        tests: [not_null]
+      - name: uptime
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              inclusive: true

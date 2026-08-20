@@ -38,12 +38,20 @@ Raw events land in the shared `raw.mqtt_events` table (see `internal.md`).
 
 **PK:** (`device`, `start_time`)
 
+One window per state change: consecutive events of the same state collapse into the running window. `end_time` is null for the newest window of each device — the state it is in now. Exactly one open window per device.
+
 #### `marts.uptime_aggregations`
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
 | `device` | `ENUM('lab','watchdog')` | Device the aggregation is for. |
-| `uptime` | `float` | Percentage of uptime. |
+| `uptime` | `float` | Percentage of uptime, 0-100 with two decimals. |
 | `time` | `ENUM('month','3 months','year','all')` | Time range of the aggregation. |
+| `range_start` | `TIMESTAMPTZ` | Start of the range the percentage covers. |
+| `range_end` | `TIMESTAMPTZ` | End of the range — the dbt run time. |
 
 **PK:** (`device`, `time`)
+
+Four precomputed ranges, anchored to the run time, so a consumer gets a percentage per lookback with one indexed read and no date math. Arbitrary ranges are not served here — read `uptime_windows` and clip. `range_end` is also the freshness marker: the numbers are as stale as the last dbt run.
+
+Every range is floored at the device's first event, so a device with a week of history reports its real week under `year` rather than 2% uptime. Windows straddling a range boundary are clipped, not dropped. The open window counts up to `range_end`, which means the latest known state is assumed to persist — a device that dies without a `down` event keeps reading as up until its peer reports it.
