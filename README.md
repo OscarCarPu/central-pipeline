@@ -25,7 +25,7 @@ make up                # start Postgres, wait until healthy
 
 Every variable in `.env.example` is required. Compose fails fast rather than starting a service with a blank credential, so an unset `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `MQTT_PORT`, `MQTT_USERNAME` or `MQTT_PASSWORD` aborts the command.
 
-Postgres publishes `POSTGRES_PORT` (5432 by default) — change it if another project already owns that port. Containers reach the database at `db:5432` regardless, since the published port and the in-network one are independent. On first start the SQL in `initdb/` runs automatically to create the schemas.
+Postgres publishes `POSTGRES_PORT` (54321 by default, so it does not collide with a plain Postgres on 5432 — the server runs this database alongside gv's) — change it if another project already owns that port. Containers reach the database at `db:5432` regardless, since the published port and the in-network one are independent. On first start the SQL in `initdb/` runs automatically to create the schemas.
 
 The consumer authenticates against the broker as `central-pipeline`, which needs both a password (`make create-password`) and an entry in the broker's ACL — a user missing from the ACL connects fine and then silently receives nothing.
 

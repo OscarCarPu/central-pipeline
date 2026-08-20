@@ -1,5 +1,7 @@
 # Feature: uptime-process
 
+**Status: done.** Bronze, silver and gold are implemented and tested: `raw.mqtt_events` (Go consumer), `staging.watchdog_uptime`, `marts.uptime_windows`, `marts.uptime_aggregations`. gv-api reads the two marts directly over Postgres — see [sources/watchdog.md](../sources/watchdog.md) for the column contracts.
+
 Consumes `events/uptime/lab` and `events/uptime/watchdog` from MQTT, persists raw events to Postgres, and transforms them into uptime windows via dbt for gv-api to serve.
 
 Retry logic lives here, not in the source projects. The queue is the broker's persistent session rather than a local disk spool — see the ingestion contract in [internal.md](../internal.md).
