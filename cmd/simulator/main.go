@@ -27,6 +27,7 @@ func main() {
 	mode := flag.String("mode", "live", "live, backfill or once")
 	device := flag.String("device", "lab", "device, for -mode=once")
 	state := flag.String("state", "up", "state, for -mode=once")
+	at := flag.String("at", "", "RFC 3339 instant for -mode=once, defaults to now")
 	interval := flag.Duration("interval", 5*time.Second, "time between live ticks")
 	since := flag.Duration("since", 365*24*time.Hour, "how far back to backfill")
 	step := flag.Duration("step", time.Hour, "simulated time between backfill ticks")
@@ -65,11 +66,15 @@ func main() {
 
 	switch *mode {
 	case "once":
-		e := uptime.Event{Device: uptime.Device(*device), State: *state, At: time.Now()}
+		ts, err := eventTime(*at)
+		if err != nil {
+			log.Fatal(err)
+		}
+		e := uptime.Event{Device: uptime.Device(*device), State: *state, At: ts}
 		if err := p.send(e); err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("%s %s", e.Topic(), e.State)
+		log.Printf("%s %s at %s", e.Topic(), e.State, e.At.UTC().Format(time.RFC3339))
 
 	case "backfill":
 		until := time.Now()
@@ -109,6 +114,18 @@ func main() {
 	default:
 		log.Fatalf("unknown mode %q", *mode)
 	}
+}
+
+// eventTime resolves -at, which lets a single event be placed in the past.
+func eventTime(at string) (time.Time, error) {
+	if at == "" {
+		return time.Now(), nil
+	}
+	t, err := time.Parse(time.RFC3339, at)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid -at %q: %w", at, err)
+	}
+	return t, nil
 }
 
 func (p *publisher) send(e uptime.Event) error {

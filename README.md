@@ -41,6 +41,10 @@ The consumer exits on a failed initial connect and the restart policy brings it 
 
 `make up` deliberately starts Postgres only. The consumer is left out so the dev database comes up whether or not a broker is running.
 
+### Commit hook
+
+`.git/hooks/pre-commit` runs `make test-silent`: Go unit tests, the integration tests, and `dbt build`. It starts Postgres itself, prints only which stage failed, and blocks the commit on a non-zero exit. `git commit --no-verify` skips it. The hook lives in `.git/hooks`, so it is not cloned with the repo — copy it again after a fresh clone.
+
 ### Running dbt
 
 dbt runs as a container too, under the `tools` compose profile so it stays out of `make up` and `make down`. `make dbt-run` executes `dbt build` — models and tests together, so a failing test stops the run instead of publishing bad rows to `marts`. Credentials come from the same `.env`; `dbt/profiles.yml` reads them via `env_var()`.
@@ -57,6 +61,7 @@ dbt runs as a container too, under the `tools` compose profile so it stays out o
 | `make consumer-logs` | Follow the consumer container logs |
 | `make dbt-run` | Run `dbt build` — staging and marts, with tests |
 | `make test-integration` | Run the tests that need Postgres up |
+| `make test-silent` | Everything quietly, pass/fail only — what the pre-commit hook runs |
 | `make db` | Open a pgcli session against the database |
 
 ## Sources

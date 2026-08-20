@@ -16,13 +16,15 @@ Esp32 watchdog and go consumer that tracks uptime events (up and down) of both d
 
 Raw events land in the shared `raw.mqtt_events` table (see `internal.md`).
 
+Every column below is materialised as `TEXT` or `TIMESTAMPTZ` — dbt has no enum types, so the value sets are enforced by `accepted_values` tests instead of by the database. Consumers should treat them as text with a closed value set.
+
 ### Staging — `staging.watchdog_uptime`
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
 | `event_id` | `BIGINT` | From the raw event id. |
-| `device` | `ENUM('lab','watchdog')` | Device the event belongs to. |
-| `state` | `ENUM('up','down')` | State it switches to. |
+| `device` | `TEXT` | Device the event belongs to. |
+| `state` | `TEXT` | State it switches to. |
 | `event_time` | `TIMESTAMPTZ` | When the switch occurred (UTC). |
 
 ### Marts
@@ -31,8 +33,8 @@ Raw events land in the shared `raw.mqtt_events` table (see `internal.md`).
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
-| `device` | `ENUM('lab','watchdog')` | Device the window is for. |
-| `state` | `ENUM('up','down')` | State of the window. |
+| `device` | `TEXT` | Device the window is for. |
+| `state` | `TEXT` | State of the window. |
 | `start_time` | `TIMESTAMPTZ` | When the window starts. |
 | `end_time` | `TIMESTAMPTZ` | When the window ends (nullable). |
 
@@ -44,9 +46,9 @@ One window per state change: consecutive events of the same state collapse into 
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
-| `device` | `ENUM('lab','watchdog')` | Device the aggregation is for. |
+| `device` | `TEXT` | Device the aggregation is for. |
 | `uptime` | `float` | Percentage of uptime, 0-100 with two decimals. |
-| `time` | `ENUM('month','3 months','year','all')` | Time range of the aggregation. |
+| `time` | `TEXT` | Time range of the aggregation. |
 | `range_start` | `TIMESTAMPTZ` | Start of the range the percentage covers. |
 | `range_end` | `TIMESTAMPTZ` | End of the range — the dbt run time. |
 
